@@ -5,6 +5,7 @@ import 'dotenv/config';
 import connectCloudinary from './config/cloudinary.js';
 import adminRouter from './routes/adminRoute.js';
 import doctorRouter from './routes/doctorRoute.js';
+import userRouter from './routes/userRoute.js';
 
 
 // app config
@@ -23,6 +24,9 @@ app.use('/api/admin', adminRouter);
 
 app.use('/api/doctor', doctorRouter)
 //used to get the data of all doctors for the frontend code
+
+app.use('/api/user', userRouter)
+//used to register the user
 
 app.get('/', (req, res) => {
     res.send("API is working")
