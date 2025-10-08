@@ -47,6 +47,8 @@ const AdminContextProvider = (props) => {
             const {data} = await axios.get(backendUrl + '/api/admin/appointments', {headers: { Authorization: `Bearer ${aToken}` }})
             if (data.success) {
                 setAppointments(data.appointments)
+                console.log(data.appointments);
+                
             } else {
                 toast.error(data.message)
             }
