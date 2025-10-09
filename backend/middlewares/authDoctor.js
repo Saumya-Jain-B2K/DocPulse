@@ -1,21 +1,21 @@
 
 import jwt from 'jsonwebtoken'
 
-// user authentication middleware
-const authUser = async (req, res, next) => {
-  console.log("authUser middleware triggered 🚀");
+// doctor authentication middleware
+const authDoctor = async (req, res, next) => {
+  console.log("authDoctor middleware triggered 🚀");
   try {
     const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.startsWith("Bearer ")
+    const dtoken = authHeader && authHeader.startsWith("Bearer ")
       ? authHeader.split(" ")[1]
       : authHeader;
 
-    if (!token) {
+    if (!dtoken) {
       return res.json({ success: false, message: "Not authorized login again" });
     }
 
-    const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-    req.userId = token_decode.id;
+    const token_decode = jwt.verify(dtoken, process.env.JWT_SECRET);
+    req.docId = token_decode.id;
     next();
   } catch (error) {
     console.log(error);
@@ -23,4 +23,4 @@ const authUser = async (req, res, next) => {
   }
 };
 
-export default authUser;
+export default authDoctor;
