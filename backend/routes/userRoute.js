@@ -24,9 +24,14 @@ userRouter.post('/payment-razorpay', authUser, paymentRazorpay)
 
 userRouter.post('/verifyRazorpay', authUser, verifyRazorpay)
 
-userRouter.get('/google',
-    passport.authenticate('google', { scope: ['profile', 'email'], session: false })
-);
+userRouter.get('/google', (req, res, next) => {
+    const origin = req.query.origin || 'user';
+    passport.authenticate('google', {
+        scope: ['profile', 'email'],
+        session: false,
+        state: origin
+    })(req, res, next);
+});
 
 userRouter.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login', session: false }),

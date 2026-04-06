@@ -54,8 +54,27 @@ const googleAuth = async (req, res) => {
         const profile = req.user;
         const email = profile.emails[0].value;
         const googleId = profile.id;
+        const origin = req.query.state || 'user';
 
-        // Find existing user by googleId or email
+        // 1. Check if the user is Admin
+        if (email === process.env.ADMIN_EMAIL) {
+            const token = jwt.sign(email + process.env.ADMIN_PASSWORD, process.env.JWT_SECRET);
+            return res.redirect(`http://localhost:5174?token=${token}&role=admin`);
+        }
+
+        // 2. Check if the user is a Doctor
+        let doctor = await doctorModel.findOne({ email });
+        if (doctor) {
+            const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET);
+            return res.redirect(`http://localhost:5174?token=${token}&role=doctor`);
+        }
+
+        // 3. Handle unauthorized Admin/Doctor login attempt
+        if (origin === 'admin') {
+            return res.redirect('http://localhost:5174?error=unauthorized');
+        }
+
+        // 4. Regular User logic
         let user = await userModel.findOne({ $or: [{ email }, { googleId }] });
 
         if (!user) {
@@ -73,14 +92,15 @@ const googleAuth = async (req, res) => {
             await user.save();
         }
 
-        // Issue JWT token
+        // Issue JWT token for user
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
-        // Redirect back to frontend with the token as query parameter
+        // Redirect back to user frontend
         res.redirect(`http://localhost:5173/login?token=${token}`);
 
     } catch (error) {
         console.log(error);
+        res.redirect("http://localhost:5173/login?error=auth_failed");
     }
 }
 
