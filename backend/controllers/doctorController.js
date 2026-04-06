@@ -28,26 +28,55 @@ const doctorList = async (req, res) => {
 }
 
 // api for doctor login
-const loginDoctor = async(req, res) => {
+const loginDoctor = async (req, res) => {
     try {
-        const {email, password} = req.body
-        const doctor = await doctorModel.findOne({email})
+        const { email, password } = req.body
+        const doctor = await doctorModel.findOne({ email })
 
         if (!doctor) {
-            return res.json({success: false, message: 'Invalid credentials'})
+            return res.json({ success: false, message: 'Invalid credentials' })
         }
 
         const isMatch = await bcrypt.compare(password, doctor.password)
 
         if (isMatch) {
-            const token = jwt.sign({id: doctor._id}, process.env.JWT_SECRET)
-            res.json({success: true, token})
+            const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET, { expiresIn: '2d' })
+            
+            res.cookie('dToken', token, {
+                httpOnly: true,
+                secure: false, // set to true in production
+                sameSite: 'lax',
+                maxAge: 2 * 24 * 60 * 60 * 1000
+            });
+
+            res.json({ success: true, token, message: "Login Successful" })
         } else {
-            res.json({success: false, message: 'Invalid Credentials'})
+            res.json({ success: false, message: 'Invalid Credentials' })
         }
     } catch (error) {
         console.log(error)
-        res.json({success: false, message: error.message})
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// api to verify doctor auth
+const verifyDoctor = async (req, res) => {
+    try {
+        res.json({ success: true, message: "Authorized" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// api for doctor logout
+const logoutDoctor = async (req, res) => {
+    try {
+        res.clearCookie('dToken');
+        res.json({ success: true, message: "Logged Out" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -164,4 +193,4 @@ const updateDoctorProfile = async (req, res) => {
 }
 
 
-export {changeAvailablity, doctorList, loginDoctor, appointmentsDoctor, appointmentCancel, appointmentComplete, doctorDashboard, doctorProfile, updateDoctorProfile}
+export { changeAvailablity, doctorList, loginDoctor, appointmentsDoctor, appointmentCancel, appointmentComplete, doctorDashboard, doctorProfile, updateDoctorProfile, logoutDoctor, verifyDoctor }

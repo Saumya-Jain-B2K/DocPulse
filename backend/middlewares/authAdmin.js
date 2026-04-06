@@ -32,22 +32,16 @@ import jwt from 'jsonwebtoken'
 const authAdmin = async (req, res, next) => {
   console.log("authAdmin middleware triggered 🚀");
   try {
-    const authHeader = req.headers["authorization"]; // read the header
+    const atoken = req.cookies.aToken;
 
-    if (!authHeader) {
-      return res.json({ success: false, message: "Not authorized login again" });
-    }
-
-    // Extract token (it will be in format: "Bearer <token>")
-    const atoken = authHeader.split(" ")[1];
     if (!atoken) {
-      return res.json({ success: false, message: "Invalid token format" });
+      return res.json({ success: false, message: "Not authorized login again" });
     }
 
     // Verify token
     const token_decode = jwt.verify(atoken, process.env.JWT_SECRET);
 
-    if (token_decode !== process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD) {
+    if (token_decode.role !== 'admin' || token_decode.email !== process.env.ADMIN_EMAIL) {
       return res.json({ success: false, message: "Not authorized login again" });
     }
 

@@ -67,18 +67,36 @@ const addDoctor = async (req, res) => {
 // api for the admin login
 const loginAdmin = async (req, res) => {
     try {
-        
-        const {email, password} = req.body;
+        const { email, password } = req.body;
         if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-            const token = jwt.sign(email+password, process.env.JWT_SECRET)
-            res.json({success: true, token})
+            const token = jwt.sign({ email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '2d' });
+            
+            res.cookie('aToken', token, {
+                httpOnly: true,
+                secure: false, // set to true in production
+                sameSite: 'lax',
+                maxAge: 2 * 24 * 60 * 60 * 1000
+            });
+
+            res.json({ success: true, message: "Login Successful" });
         } else {
-            res.json({success: false, message: "Invalid Credentials"})
+            res.json({ success: false, message: "Invalid Credentials" });
         }
 
     } catch (error) {
-        console.log(error)
-        res.json({success: false, message: error.message})
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// api for admin logout
+const logoutAdmin = async (req, res) => {
+    try {
+        res.clearCookie('aToken');
+        res.json({ success: true, message: "Logged Out" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -149,12 +167,22 @@ const adminDashboard = async(req, res) => {
             latestAppointments: appointments.reverse().slice(0, 5)
         }
 
-        res.json({success: true, dashData})
+        res.json({ success: true, dashData })
     } catch (error) {
         console.log(error)
-        res.json({success: false, message: error.message})
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// api to verify admin auth
+const verifyAdmin = async (req, res) => {
+    try {
+        res.json({ success: true, message: "Authorized" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
 }
 
 
-export {addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard}
+export { addDoctor, loginAdmin, allDoctors, appointmentsAdmin, appointmentCancel, adminDashboard, logoutAdmin, verifyAdmin }

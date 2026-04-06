@@ -1,5 +1,5 @@
 import express from 'express'
-import { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth } from '../controllers/userController.js'
+import { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth, logoutUser, verifyUser } from '../controllers/userController.js'
 import authUser from '../middlewares/authUser.js'
 import upload from '../middlewares/multer.js'
 import passport from 'passport'
@@ -9,8 +9,10 @@ const userRouter = express.Router()
 userRouter.post('/register', registerUser)
 
 userRouter.post('/login', loginUser)
+userRouter.post('/logout', logoutUser)
 
 userRouter.get('/get-profile', authUser, getProfile)
+userRouter.get('/verify', authUser, verifyUser)
 
 userRouter.post('/update-profile', upload.single('image'), authUser, updateProfile)
 
@@ -24,9 +26,14 @@ userRouter.post('/payment-razorpay', authUser, paymentRazorpay)
 
 userRouter.post('/verifyRazorpay', authUser, verifyRazorpay)
 
-userRouter.get('/google',
-    passport.authenticate('google', { scope: ['profile', 'email'], session: false })
-);
+userRouter.get('/google', (req, res, next) => {
+    const origin = req.query.origin || 'user';
+    passport.authenticate('google', {
+        scope: ['profile', 'email'],
+        session: false,
+        state: origin
+    })(req, res, next);
+});
 
 userRouter.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login', session: false }),

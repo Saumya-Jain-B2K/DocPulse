@@ -39,7 +39,14 @@ const registerUser = async (req, res) => {
         const newUser = new userModel(userData)
         const user = await newUser.save()
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '2d' })
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'strict',
+            maxAge: 2 * 24 * 60 * 60 * 1000
+        });
 
         res.json({ success: true, token })
 
@@ -54,8 +61,43 @@ const googleAuth = async (req, res) => {
         const profile = req.user;
         const email = profile.emails[0].value;
         const googleId = profile.id;
+        const origin = req.query.state || 'user';
 
-        // Find existing user by googleId or email
+        // 1. Check if the user is Admin
+        if (email === process.env.ADMIN_EMAIL) {
+            const token = jwt.sign({ email, role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '2d' });
+            
+            res.cookie('aToken', token, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'lax',
+                maxAge: 2 * 24 * 60 * 60 * 1000
+            });
+
+            return res.redirect(`http://localhost:5174?role=admin`);
+        }
+
+        // 2. Check if the user is a Doctor
+        let doctor = await doctorModel.findOne({ email });
+        if (doctor) {
+            const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET, { expiresIn: '2d' });
+            
+            res.cookie('dToken', token, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'lax',
+                maxAge: 2 * 24 * 60 * 60 * 1000
+            });
+
+            return res.redirect(`http://localhost:5174?role=doctor`);
+        }
+
+        // 3. Handle unauthorized Admin/Doctor login attempt
+        if (origin === 'admin') {
+            return res.redirect('http://localhost:5174?error=unauthorized');
+        }
+
+        // 4. Regular User logic
         let user = await userModel.findOne({ $or: [{ email }, { googleId }] });
 
         if (!user) {
@@ -73,14 +115,22 @@ const googleAuth = async (req, res) => {
             await user.save();
         }
 
-        // Issue JWT token
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+        // Issue JWT token for user
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '2d' });
 
-        // Redirect back to frontend with the token as query parameter
-        res.redirect(`http://localhost:5173/login?token=${token}`);
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'lax',
+            maxAge: 2 * 24 * 60 * 60 * 1000
+        });
+
+        // Redirect back to user frontend
+        res.redirect(`http://localhost:5173/login`);
 
     } catch (error) {
         console.log(error);
+        res.redirect("http://localhost:5173/login?error=auth_failed");
     }
 }
 
@@ -97,7 +147,15 @@ const loginUser = async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password)
 
         if (isMatch) {
-            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
+            const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '2d' })
+            
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'strict',
+                maxAge: 2 * 24 * 60 * 60 * 1000
+            });
+
             res.json({ success: true, token })
         } else {
             res.json({ success: false, message: "Invalid credentials" })
@@ -105,6 +163,27 @@ const loginUser = async (req, res) => {
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
+    }
+}
+
+// api to logout user
+const logoutUser = async (req, res) => {
+    try {
+        res.clearCookie('token');
+        res.json({ success: true, message: "Logged Out" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// api to verify user auth
+const verifyUser = async (req, res) => {
+    try {
+        res.json({ success: true, message: "Authorized" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
 }
 
@@ -313,4 +392,4 @@ const verifyRazorpay = async (req, res) => {
 }
 
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth }
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth, logoutUser, verifyUser }

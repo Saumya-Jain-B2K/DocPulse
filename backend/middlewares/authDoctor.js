@@ -5,10 +5,7 @@ import jwt from 'jsonwebtoken'
 const authDoctor = async (req, res, next) => {
   console.log("authDoctor middleware triggered 🚀");
   try {
-    const authHeader = req.headers["authorization"];
-    const dtoken = authHeader && authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : authHeader;
+    const dtoken = req.cookies.dToken;
 
     if (!dtoken) {
       return res.json({ success: false, message: "Not authorized login again" });

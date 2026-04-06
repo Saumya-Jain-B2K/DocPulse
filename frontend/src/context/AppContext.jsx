@@ -13,7 +13,7 @@ const AppContextProvider = (props) => {
 
     const [doctors, setDoctors] = useState([])
 
-    const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : false)
+    const [token, setToken] = useState(false)
 
     const [userData, setUserData] = useState(false)
 
@@ -33,7 +33,7 @@ const AppContextProvider = (props) => {
 
     const loadUserProfileData = async () => {
         try {
-            const {data} = await axios.get(backendUrl + '/api/user/get-profile', {headers: {Authorization: `Bearer ${token}`,}})
+            const {data} = await axios.get(backendUrl + '/api/user/get-profile')
             if (data.success) {
                 setUserData(data.userData)
             } else {
@@ -45,7 +45,21 @@ const AppContextProvider = (props) => {
         }
     }
 
-        const value = {
+        useEffect(() => {
+        const verify = async () => {
+            try {
+                const { data } = await axios.get(backendUrl + '/api/user/verify')
+                if (data.success) {
+                    setToken(true)
+                }
+            } catch (error) {
+                setToken(false)
+            }
+        }
+        verify()
+    }, [backendUrl])
+
+    const value = {
         doctors, 
         getDoctorsData,
         currencySymbol,
