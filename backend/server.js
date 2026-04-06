@@ -6,9 +6,13 @@ import connectCloudinary from './config/cloudinary.js';
 import adminRouter from './routes/adminRoute.js';
 import doctorRouter from './routes/doctorRoute.js';
 import userRouter from './routes/userRoute.js';
+import passport from 'passport';
+import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import dotenv from 'dotenv';
 
 
 // app config
+dotenv.config();
 const app = express();
 const port = process.env.PORT || 4000;
 connectDB();
@@ -16,7 +20,19 @@ connectCloudinary();
 
 // middlewares
 app.use(express.json());
-app.use(cors()); 
+app.use(cors());
+
+app.use(passport.initialize());
+
+// Configure Passport to use Google OAuth 2.0 strategy
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: '/api/user/google/callback',
+}, (accessToken, refreshToken, profile, done) => {
+
+    return done(null, profile);
+}));
 
 //api endpoints
 app.use('/api/admin', adminRouter);
