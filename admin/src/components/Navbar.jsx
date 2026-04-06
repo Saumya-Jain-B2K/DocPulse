@@ -1,4 +1,5 @@
 import React, { useContext } from 'react'
+import axios from 'axios'
 import { assets } from '../assets/assets'
 import { AdminContext } from '../context/AdminContext'
 import { useNavigate} from 'react-router-dom'
@@ -6,17 +7,25 @@ import { DoctosContext } from '../context/DoctorContext'
 
 const Navbar = () => {
 
-    const {aToken, setAToken} = useContext(AdminContext);
-    const {dToken, setDToken} = useContext(DoctosContext)
+    const { aToken, setAToken, backendUrl: adminBackendUrl } = useContext(AdminContext);
+    const { dToken, setDToken, backendUrl: doctorBackendUrl } = useContext(DoctosContext)
 
     const navigate = useNavigate();
 
-    const logout = () => {
-      navigate('/')
-      aToken && setAToken('')
-      aToken && localStorage.removeItem('aToken');
-      dToken && setDToken('')
-      dToken && localStorage.removeItem('dToken');
+    const logout = async () => {
+        try {
+            if (aToken) {
+                await axios.post(adminBackendUrl + '/api/admin/logout')
+                setAToken(false)
+            }
+            if (dToken) {
+                await axios.post(doctorBackendUrl + '/api/doctor/logout')
+                setDToken(false)
+            }
+            navigate('/')
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     

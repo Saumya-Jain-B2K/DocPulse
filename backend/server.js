@@ -9,7 +9,7 @@ import userRouter from './routes/userRoute.js';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import dotenv from 'dotenv';
-
+import cookieParser from 'cookie-parser';
 
 // app config
 dotenv.config();
@@ -20,7 +20,11 @@ connectCloudinary();
 
 // middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    credentials: true
+}));
 
 app.use(passport.initialize());
 

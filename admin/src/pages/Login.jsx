@@ -19,48 +19,42 @@ const login = () => {
 
     useEffect(() => {
         const params = new URLSearchParams(location.search)
-        const token = params.get('token')
         const role = params.get('role')
         const error = params.get('error')
 
-        if (token && role) {
+        if (role) {
             if (role === 'admin') {
-                localStorage.setItem('aToken', token)
-                setAToken(token)
+                setAToken(true)
                 toast.success('Admin login successful')
             } else if (role === 'doctor') {
-                localStorage.setItem('dToken', token)
-                setDToken(token)
+                setDToken(true)
                 toast.success('Doctor login successful')
             }
-            // Clear URL parameters
-            navigate(location.pathname, { replace: true })
+            // Clear URL parameters and navigate to home
+            navigate('/', { replace: true })
         }
 
         if (error === 'unauthorized') {
             toast.error('Invalid Email or Unauthorized account')
-            navigate(location.pathname, { replace: true })
+            navigate('/', { replace: true })
         }
     }, [location, setAToken, setDToken, navigate])
 
-    const onSubmitHandler = async(event)=> {
+    const onSubmitHandler = async (event) => {
         event.preventDefault()
 
         try {
             if (state === 'Admin') {
-                const {data} = await axios.post(backendUrl + '/api/admin/login', {email, password})
+                const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password })
                 if (data.success) {
-                    localStorage.setItem('aToken', data.token)
-                    setAToken(data.token)
+                    setAToken(true)
                 } else {
                     toast.error(data.message)
                 }
             } else {
-                const {data} = await axios.post(backendUrl + '/api/doctor/login', {email, password})
+                const { data } = await axios.post(backendUrl + '/api/doctor/login', { email, password })
                 if (data.success) {
-                    localStorage.setItem('dToken', data.token)
-                    setDToken(data.token)
-                    console.log(data.token)
+                    setDToken(true)
                 } else {
                     toast.error(data.message)
                 }

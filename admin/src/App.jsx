@@ -16,8 +16,12 @@ import DoctorProfile from './pages/Doctor/DoctorProfile';
 
 const App = () => {
 
-  const {aToken} = useContext(AdminContext)
-  const {dToken} = useContext(DoctosContext)
+  const {aToken, loading: adminLoading} = useContext(AdminContext)
+  const {dToken, loading: doctorLoading} = useContext(DoctosContext)
+
+  if (adminLoading || doctorLoading) {
+    return <div className='min-h-screen flex items-center justify-center font-semibold text-gray-500'>Loading...</div>
+  }
 
   return aToken || dToken ? (
     <div className='bg-[#F8F9FD]'>

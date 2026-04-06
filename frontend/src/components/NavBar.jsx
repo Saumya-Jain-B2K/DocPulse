@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react'
+import axios from 'axios'
 import {assets} from '../assets/assets'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext';
@@ -7,13 +8,19 @@ const NavBar = () => {
 
     const navigate = useNavigate();
 
-    const {token, setToken, userData} = useContext(AppContext)
+    const { token, setToken, userData, backendUrl } = useContext(AppContext)
 
     const [showMenu, setShowMenu] = useState(false)
 
-    const logout = () => {
-        setToken(false)
-        localStorage.removeItem('token')
+    const logout = async () => {
+        try {
+            const { data } = await axios.post(backendUrl + '/api/user/logout')
+            if (data.success) {
+                setToken(false)
+            }
+        } catch (error) {
+            console.log(error)
+        }
     }
 
   return (
