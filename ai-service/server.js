@@ -1,7 +1,9 @@
-require("dotenv").config();
-const http = require("http");
-const app = require("./src/app");
-const initSockets = require("./src/sockets/index");
+import dotenv from 'dotenv';
+dotenv.config();
+
+import http from "http";
+import app from "./src/app.js";
+import initSockets from "./src/sockets/index.js";
 
 // Create HTTP Server
 const server = http.createServer(app);

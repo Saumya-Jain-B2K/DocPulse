@@ -1,6 +1,6 @@
-const { tool } = require("@langchain/core/tools");
-const { z } = require("zod");
-const axios = require("axios");
+import { tool } from "@langchain/core/tools";
+import { z } from "zod";
+import axios from "axios";
 
 const validSpecialities = [
   "General physician",
@@ -12,7 +12,7 @@ const validSpecialities = [
 ];
 
 /**
- * 🛠️ LangChain Tool: Search MongoDB Doctors via API
+ * LangChain Tool: Search MongoDB Doctors via API
  * Connects to the main backend API to fetch real doctors.
  */
 const recommendDoctorTool = tool(
@@ -60,6 +60,4 @@ const recommendDoctorTool = tool(
   }
 );
 
-module.exports = {
-  tools: [recommendDoctorTool]
-};
+export const tools = [recommendDoctorTool];

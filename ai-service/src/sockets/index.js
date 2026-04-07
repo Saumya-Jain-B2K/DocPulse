@@ -1,9 +1,9 @@
-const { Server } = require("socket.io");
-const { processSymptom } = require("../agent/agent");
-const cookie = require("cookie");
-const jwt = require("jsonwebtoken");
+import { Server } from "socket.io";
+import { processSymptom } from "../agent/agent.js";
+import cookie from "cookie";
+import jwt from "jsonwebtoken";
 
-module.exports = (server) => {
+export default (server) => {
     const io = new Server(server, {
         cors: {
             origin: ["http://localhost:5173", "http://localhost:5174"], // specific origin instead of '*' to allow credentials

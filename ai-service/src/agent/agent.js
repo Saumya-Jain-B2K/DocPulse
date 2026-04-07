@@ -1,11 +1,13 @@
-require("dotenv").config();
-const { ChatGoogleGenerativeAI } = require("@langchain/google-genai");
-const { StateGraph, END, START, MemorySaver } = require("@langchain/langgraph");
-const { HumanMessage, SystemMessage, AIMessage } = require("@langchain/core/messages");
-const { ToolNode } = require("@langchain/langgraph/prebuilt");
+import dotenv from "dotenv";
+dotenv.config();
+
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { StateGraph, END, START, MemorySaver } from "@langchain/langgraph";
+import { HumanMessage, SystemMessage, AIMessage } from "@langchain/core/messages";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
 
 // Import the tools (this now connects to the backend MongoDB wrapper via Axios)
-const { tools } = require("./tools");
+import { tools } from "./tools.js";
 
 const llm = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash",
@@ -137,4 +139,4 @@ async function processSymptom(newMessages, threadId) {
   }
 }
 
-module.exports = { processSymptom };
+export { processSymptom };

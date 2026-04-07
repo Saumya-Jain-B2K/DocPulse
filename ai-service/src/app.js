@@ -1,6 +1,6 @@
-const express = require("express");
-const cors = require("cors");
-const { processSymptom } = require("./agent/agent");
+import express from "express";
+import cors from "cors";
+import { processSymptom } from "./agent/agent.js";
 
 const app = express();
 
@@ -30,4 +30,4 @@ app.post("/api/ai/chat", async (req, res) => {
     }
 });
 
-module.exports = app;
+export default app;
