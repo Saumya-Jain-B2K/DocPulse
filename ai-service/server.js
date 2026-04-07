@@ -11,7 +11,7 @@ const server = http.createServer(app);
 // Initialize Socket.io
 initSockets(server);
 
-const PORT = process.env.PORT || 4001;
+const PORT = process.env.PORT;
 
 server.listen(PORT, () => {
     console.log(`AI Service HTTP & WebSocket running on port ${PORT}`);

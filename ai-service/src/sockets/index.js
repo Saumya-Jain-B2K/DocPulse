@@ -28,8 +28,7 @@ export default (server) => {
             }
 
             // Verify JWT against DocPulse master secret
-            // Ensure you added JWT_SECRET="docpulse" to ai-service/.env
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || "docpulse");
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
             
             // Attach user ID directly to the socket context for potential future logic
             socket.userId = decoded.id; 
