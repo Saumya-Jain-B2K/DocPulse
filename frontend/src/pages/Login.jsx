@@ -23,7 +23,8 @@ const Login = () => {
       if (state === 'Sign Up') {
         const {data} = await axios.post(backendUrl + '/api/user/register', {name, password, email})
         if (data.success) {
-          setToken(true)
+          toast.success(data.message)
+          navigate(`/verify-otp?email=${encodeURIComponent(email)}`)
         } else {
           toast.error(data.message)
         }

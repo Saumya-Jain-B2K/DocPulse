@@ -10,6 +10,8 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import initCronJobs from './utils/cronJobs.js';
+import sendEmail from './config/emailConfig.js';
 
 // app config
 dotenv.config();
@@ -17,6 +19,7 @@ const app = express();
 const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
+initCronJobs();
 
 // middlewares
 app.use(express.json());
@@ -52,4 +55,10 @@ app.get('/', (req, res) => {
     res.send("API is working")
 });
 
-app.listen(port, () => console.log("Server Started", port))
+app.listen(port, () => {
+    console.log("Server Started", port);
+    // test email on startup
+    // sendEmail('editshot13@gmail.com', 'DocPulse - Startup Test', '<h1>Server Started</h1><p>DocPulse backend is now running and email configuration is being tested.</p>')
+    //     .then(() => console.log('Startup test email sent successfully to editshot13@gmail.com'))
+    //     .catch(err => console.error('Startup test email failed:', err));
+});

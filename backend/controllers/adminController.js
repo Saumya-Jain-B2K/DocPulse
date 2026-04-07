@@ -5,6 +5,8 @@ import doctorModel from "../models/doctorModel.js"
 import jwt from 'jsonwebtoken';
 import appointmentModel from "../models/appointmentModel.js";
 import userModel from "../models/userModel.js";
+import sendEmail from "../config/emailConfig.js";
+import { doctorOnboardingTemplate } from "../utils/emailTemplates.js";
 
 
 
@@ -55,6 +57,11 @@ const addDoctor = async (req, res) => {
 
         const newDoctor = new doctorModel(doctorData)
         await newDoctor.save()
+
+        // Send Onboarding Email to Doctor
+        const emailSubject = 'Welcome to DocPulse - Your Doctor Account is Ready'
+        const emailHTML = doctorOnboardingTemplate(name, email, password)
+        await sendEmail(email, emailSubject, emailHTML)
 
         res.json({success: true, message: "Doctor added successfully"});
 

@@ -6,11 +6,14 @@ import { v2 as cloudinary } from 'cloudinary'
 import doctorModel from '../models/doctorModel.js'
 import appointmentModel from '../models/appointmentModel.js'
 import razorpay from 'razorpay'
+import sendEmail from '../config/emailConfig.js'
+import { otpTemplate, welcomeTemplate, bookingConfirmationTemplate } from '../utils/emailTemplates.js'
 
 // api to register user
 const registerUser = async (req, res) => {
     try {
-        const { name, email, password } = req.body
+        const { name, password } = req.body
+        const email = req.body.email.toLowerCase().trim()
 
         if (!name || !email || !password) {
             return res.json({ success: false, message: "Missing details" })
@@ -30,25 +33,92 @@ const registerUser = async (req, res) => {
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
 
-        const userData = {
-            name,
-            email,
-            password: hashedPassword
+        // Generating 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString()
+        const otpExpire = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
+        // Check if user already exists
+        const existingUser = await userModel.findOne({ email })
+
+        if (existingUser) {
+            if (existingUser.isVerified) {
+                return res.json({ success: false, message: "Account already exists" })
+            } else {
+                // Update existing unverified user with new OTP and password
+                existingUser.name = name
+                existingUser.password = hashedPassword
+                existingUser.otp = otp
+                existingUser.otpExpire = otpExpire
+                await existingUser.save()
+            }
+        } else {
+            const userData = {
+                name,
+                email,
+                password: hashedPassword,
+                otp,
+                otpExpire,
+                isVerified: false
+            }
+            const newUser = new userModel(userData)
+            await newUser.save()
         }
 
-        const newUser = new userModel(userData)
-        const user = await newUser.save()
+        // Sending OTP Email
+        await sendEmail(email, 'Verify Your Account - DocPulse', otpTemplate(otp))
+
+        res.json({ success: true, message: "OTP sent to your email" })
+
+    } catch (error) {
+        console.log(error)
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// api to verify OTP
+const verifyOTP = async (req, res) => {
+    try {
+        const { otp } = req.body
+        const email = req.body.email.toLowerCase().trim()
+
+        if (!email || !otp) {
+            return res.json({ success: false, message: "Missing details" })
+        }
+
+        const user = await userModel.findOne({ email })
+
+        if (!user) {
+            return res.json({ success: false, message: "User not found" })
+        }
+
+        if (user.isVerified) {
+            return res.json({ success: false, message: "Account already verified" })
+        }
+
+        if (user.otp !== otp || user.otpExpire < Date.now()) {
+            return res.json({ success: false, message: "Invalid or expired OTP" })
+        }
+
+        // Mark user as verified
+        user.isVerified = true
+        user.otp = ""
+        user.otpExpire = null
+        await user.save()
+
+        // Send Welcome Email
+        console.log(`Sending welcome email to: \${user.email}`)
+        await sendEmail(user.email, 'Welcome to DocPulse!', welcomeTemplate(user.name))
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '2d' })
-
+        
         res.cookie('token', token, {
             httpOnly: true,
             secure: false,
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 2 * 24 * 60 * 60 * 1000
         });
 
-        res.json({ success: true, token })
+        res.json({ success: true, token, message: "Account verified successfully" })
 
     } catch (error) {
         console.log(error)
@@ -137,11 +207,16 @@ const googleAuth = async (req, res) => {
 // api for user login
 const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body
+        const { password } = req.body
+        const email = req.body.email.toLowerCase().trim()
         const user = await userModel.findOne({ email })
 
         if (!user) {
             return res.json({ success: false, message: "User does not exist" })
+        }
+
+        if (!user.isVerified) {
+            return res.json({ success: false, message: "Account not verified. Please sign up again." })
         }
 
         const isMatch = await bcrypt.compare(password, user.password)
@@ -279,6 +354,17 @@ const bookAppointment = async (req, res) => {
         // save new slots data in docData 
         await doctorModel.findByIdAndUpdate(docId, { slots_booked })
 
+        // Send Email Notifications
+        const emailSubject = 'Appointment Booked - DocPulse'
+        const emailHTML = bookingConfirmationTemplate(userData.name, docData.name, slotDate, slotTime)
+
+        // 1. To User
+        await sendEmail(userData.email, emailSubject, emailHTML)
+        // 2. To Doctor
+        await sendEmail(docData.email, 'New Appointment Booked', `You have a new appointment with \${userData.name} on \${slotDate} at \${slotTime}`)
+        // 3. To Admin
+        await sendEmail(process.env.ADMIN_EMAIL, 'New Appointment Alert', `A new appointment has been booked. Patient: \${userData.name}, Doctor: \${docData.name}`)
+
         res.json({ success: true, message: 'Appointment Booked with the Doctor' })
 
     } catch (error) {
@@ -392,4 +478,4 @@ const verifyRazorpay = async (req, res) => {
 }
 
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth, logoutUser, verifyUser }
+export { registerUser, verifyOTP, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth, logoutUser, verifyUser }

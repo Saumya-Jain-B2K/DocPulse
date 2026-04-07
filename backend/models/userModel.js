@@ -45,7 +45,22 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "0000000000",
     },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    otp: {
+        type: String,
+        default: "",
+    },
+    otpExpire: {
+        type: Date,
+        default: null,
+    },
 })
+
+// TTL index to delete unverified users after 10 minutes
+userSchema.index({ otpExpire: 1 }, { expireAfterSeconds: 0, partialFilterExpression: { isVerified: false } });
 
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);
 

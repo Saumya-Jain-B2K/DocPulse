@@ -1,7 +1,9 @@
-import doctorModel from "../models/doctorModel.js"
-import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import appointmentModel from "../models/appointmentModel.js"
+import sendEmail from "../config/emailConfig.js"
+import { completionTemplate } from "../utils/emailTemplates.js"
+import doctorModel from "../models/doctorModel.js"
+import userModel from "../models/userModel.js"
 
 const changeAvailablity = async (req, res) => {
     try {
@@ -102,6 +104,14 @@ const appointmentComplete = async (req, res) => {
 
         if (appointmentData && appointmentData.docId.toString() === docId) {
             await appointmentModel.findByIdAndUpdate(appointmentId, {isCompleted: true})
+
+            // Send Consultation Completion Email to User
+            const userData = await userModel.findById(appointmentData.userId)
+            const docData = await doctorModel.findById(docId)
+            const emailSubject = 'Consultation Completed - DocPulse'
+            const emailHTML = completionTemplate(userData.name, docData.name)
+            await sendEmail(userData.email, emailSubject, emailHTML)
+
             return res.json({success: true, message: "Appointment completed"})
         } else {
             return res.json({success: false, message: "Mark Failed"})
