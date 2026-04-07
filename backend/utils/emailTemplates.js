@@ -63,6 +63,20 @@ const reminderTemplate = (name, docName, date, time) => `
     </div>
 `;
 
+//cancel appointment template
+const cancelAppointmentTemplate = (name, docName, date, time) => `
+    <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2>Appointment Cancelled</h2>
+        <p>Hi ${name},</p>
+        <p>Your appointment with <b>Dr. ${docName}</b> has been successfully cancelled.</p>
+        <p><b>Date:</b> ${date}</p>
+        <p><b>Time:</b> ${time}</p>
+        <p>If this was a mistake or you wish to reschedule, you can book a new appointment anytime.</p>
+        <br />
+        <p>Regards,<br />DocPulse Team</p>
+    </div>
+`;
+
 const completionTemplate = (name, docName) => `
     <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>Consultation Completed</h2>
@@ -80,5 +94,6 @@ export {
   doctorOnboardingTemplate, 
   bookingConfirmationTemplate, 
   reminderTemplate, 
-  completionTemplate 
+  completionTemplate, 
+  cancelAppointmentTemplate
 }
