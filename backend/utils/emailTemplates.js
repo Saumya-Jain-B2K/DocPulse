@@ -77,11 +77,15 @@ const cancelAppointmentTemplate = (name, docName, date, time) => `
     </div>
 `;
 
-const completionTemplate = (name, docName) => `
+const completionTemplate = (name, docName, feedbackLink) => `
     <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>Consultation Completed</h2>
         <p>Hi ${name},</p>
         <p>We hope you had a good experience with <b>Dr. ${docName}</b>.</p>
+        <p>Your feedback is important to us! Please take a moment to rate your experience and provide a summary.</p>
+        <div style="margin: 30px 0;">
+            <a href="${feedbackLink}" style="background-color: #000B6D; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Give Feedback</a>
+        </div>
         <p>Thank you for choosing DocPulse. Stay healthy!</p>
         <br />
         <p>Regards,<br />DocPulse Team</p>

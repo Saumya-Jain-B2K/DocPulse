@@ -45,6 +45,10 @@ const appointmentSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    isReviewed: {
+        type: Boolean,
+        default: false,
+    }
 })
 
 const appointmentModel = mongoose.models.appointment || mongoose.model('appointment', appointmentSchema)
