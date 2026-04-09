@@ -6,6 +6,7 @@ import connectCloudinary from './config/cloudinary.js';
 import adminRouter from './routes/adminRoute.js';
 import doctorRouter from './routes/doctorRoute.js';
 import userRouter from './routes/userRoute.js';
+import reviewRouter from './routes/reviewRoute.js';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import dotenv from 'dotenv';
@@ -50,6 +51,9 @@ app.use('/api/doctor', doctorRouter)
 
 app.use('/api/user', userRouter)
 //used to register the user
+
+app.use('/api/review', reviewRouter)
+//used for feedback and ratings
 
 app.get('/', (req, res) => {
     res.send("API is working")

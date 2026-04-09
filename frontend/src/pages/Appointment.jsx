@@ -24,6 +24,21 @@ const Appointment = () => {
     setDocInfo(docInfo)
   }
 
+  const [docReviews, setDocReviews] = useState([])
+  const [docRating, setDocRating] = useState(0)
+
+  const fetchDoctorReviews = async () => {
+    try {
+      const { data } = await axios.get(`${backendUrl}/api/review/doctor/${docId}`);
+      if (data.success) {
+        setDocReviews(data.reviews);
+        setDocRating(data.averageRating);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   const getAvailableSlots = async () => {
     setDocSlots([])
 
@@ -110,6 +125,7 @@ const Appointment = () => {
 
   useEffect(() => {
     fetchDocInfo();
+    fetchDoctorReviews();
   },[doctors, docId])
 
   useEffect(() => {
@@ -138,6 +154,13 @@ const Appointment = () => {
             {docInfo.name} 
             <img className='w-5' src={assets.verified_icon} alt="" />
           </p>
+          {docRating > 0 && (
+            <div className='flex items-center gap-1 mt-1'>
+              <span className='text-yellow-400'>★</span>
+              <span className='text-sm font-medium text-gray-700'>{docRating} / 5</span>
+              <span className='text-xs text-gray-500 ml-1'>({docReviews.length} reviews)</span>
+            </div>
+          )}
           <div className='flex items-center gap-2 text-sm mt-1 text-gray-600'>
             <p>{docInfo.degree} - {docInfo.speciality}</p>
             <button className='py-0.5 px-2 border text-xs rounded-full'>{docInfo.experience}</button>
@@ -182,6 +205,34 @@ const Appointment = () => {
           ))}
         </div>
         <button onClick={bookAppointment} className='bg-[#000B6D] text-white text-sm font-light px-14 py-3 rounded-full my-6'>Book an Appointment</button>
+      </div>
+
+      {/* Patient Reviews Section */}
+      <div className='sm:ml-72 sm:pl-4 mt-8'>
+        <p className='font-medium text-gray-700 text-lg mb-4'>Patient Reviews</p>
+        {docReviews.length > 0 ? (
+          <div className='flex flex-col gap-4'>
+            {docReviews.map((review, index) => (
+              <div key={index} className='border border-gray-200 rounded-lg p-4 bg-white shadow-sm flex flex-col gap-2'>
+                <div className='flex items-center gap-3'>
+                  <img src={review.image} alt={review.name} className='w-10 h-10 rounded-full' />
+                  <div>
+                    <p className='text-sm font-semibold text-gray-800'>{review.name}</p>
+                    <div className='flex items-center gap-1 text-xs'>
+                      {Array.from({ length: review.rating }).map((_, i) => (
+                        <span key={i} className='text-yellow-400'>★</span>
+                      ))}
+                      {review.date && <span className='text-gray-400 ml-2'>{new Date(review.date).toLocaleDateString()}</span>}
+                    </div>
+                  </div>
+                </div>
+                <p className='text-sm text-gray-600 mt-1'>{review.text}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className='text-sm text-gray-500 italic'>No reviews yet for this doctor.</p>
+        )}
       </div>
 
       {/* listing related doctors */}

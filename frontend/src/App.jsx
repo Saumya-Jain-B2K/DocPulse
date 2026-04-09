@@ -10,6 +10,7 @@ import MyAppointments from './pages/MyAppointments'
 import Appointment from './pages/Appointment'
 import VerifyOTP from './pages/VerifyOTP'
 import ChatBot from './pages/ChatBot'
+import Feedback from './pages/Feedback'
 import NavBar from './components/NavBar'
 import Footer from './components/Footer'
 import { ToastContainer, toast } from 'react-toastify';
@@ -31,6 +32,7 @@ const App = () => {
         <Route path='/my-profile' element={<MyProfile />}/>
         <Route path='/my-appointments' element={<MyAppointments />}/>
         <Route path='/appointment/:docId' element={<Appointment />}/>
+        <Route path='/feedback/:appointmentId' element={<Feedback />}/>
       </Routes>
       <Footer />
     </div>
