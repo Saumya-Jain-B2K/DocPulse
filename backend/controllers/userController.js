@@ -265,7 +265,7 @@ const loginUser = async (req, res) => {
         maxAge: 2 * 24 * 60 * 60 * 1000,
       });
 
-      res.json({ success: true, token });
+      res.json({ success: true, token, userId: user._id });
     } else {
       res.json({ success: false, message: "Invalid credentials" });
     }
