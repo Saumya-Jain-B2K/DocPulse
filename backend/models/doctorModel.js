@@ -53,7 +53,11 @@ const doctorSchema = new mongoose.Schema({
     slots_booked: {
         type: Object,
         default: {},
-    }
+    },
+    consultationFees: {
+    type: Number,
+    default: null,
+}
 }, {minimize: false})
 
 const doctorModel = mongoose.models.doctor || mongoose.model('doctor', doctorSchema);

@@ -92,10 +92,24 @@ const completionTemplate = (name, docName, feedbackLink) => `
     </div>
 `;
 
+const consultationBookingTemplate = (userName, docName, date, time) => `
+    <div style="font-family: Arial; padding: 20px;">
+        <h2>Consultation Booked ✅</h2>
+        <p>Hi ${userName},</p>
+        <p>Your consultation with <b>Dr. ${docName}</b> has been booked successfully.</p>
+        <p><b>Date:</b> ${date}</p>
+        <p><b>Time:</b> ${time}</p>
+        <p>You will receive a link at the consultation time.</p>
+        <br/>
+        <p>Regards,<br/>DocPulse Team</p>
+    </div>
+`;
+
 export { 
   otpTemplate, 
   welcomeTemplate, 
   doctorOnboardingTemplate, 
+  consultationBookingTemplate,
   bookingConfirmationTemplate, 
   reminderTemplate, 
   completionTemplate, 

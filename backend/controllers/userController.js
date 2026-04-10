@@ -7,11 +7,14 @@ import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
 import razorpay from "razorpay";
 import sendEmail from "../config/emailConfig.js";
+import mongoose from "mongoose";
+import consultationModel from "../models/consultationModel.js";
 import {
   otpTemplate,
   welcomeTemplate,
   bookingConfirmationTemplate,
   cancelAppointmentTemplate,
+  consultationBookingTemplate,
 } from "../utils/emailTemplates.js";
 
 // api to register user
@@ -568,6 +571,190 @@ const verifyRazorpay = async (req, res) => {
   }
 };
 
+// API to book consultation
+const bookConsultation = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { docId, slotDate, slotTime } = req.body;
+    
+    //checking if the consultation slot is in the future
+    const consultationDateTime = new Date(`${slotDate} ${slotTime}`);
+    const now = new Date();
+
+    if (consultationDateTime <= now) {
+      return res.json({
+        success: false,
+        message: "Please select a future time slot",
+      });
+    }
+
+    const docData = await doctorModel.findById(docId).select("-password");
+    const userData = await userModel.findById(userId).select("-password");
+
+    if (!docData || !userData) {
+      return res.json({ success: false, message: "Data not found" });
+    }
+
+    // 🔥 CHECK FIRST CONSULTATION
+    const existingConsultation = await consultationModel.findOne({
+      userId,
+      docId,
+      cancelled: false,
+    });
+
+    let amount = 0;
+    let isFirstConsultation = false;
+
+    if (!existingConsultation) {
+      amount = 0; // FREE
+      isFirstConsultation = true;
+    } else {
+      amount =
+        docData.consultationFees !== null &&
+        docData.consultationFees !== undefined
+          ? docData.consultationFees
+          : 50; // PAID
+    }
+
+    // 🔥 GENERATE CHAT ROOM ID
+    const chatRoomId = new mongoose.Types.ObjectId().toString();
+
+    const consultationData = {
+      userId,
+      docId,
+      userData,
+      docData,
+      slotDate,
+      slotTime,
+      amount,
+      isFirstConsultation,
+      chatRoomId,
+      date: Date.now(),
+    };
+
+    const newConsultation = new consultationModel(consultationData);
+    await newConsultation.save();
+
+    // 🔥 Send Email Notifications
+
+    // 1. To User
+    await sendEmail(
+      userData.email,
+      "Consultation Booked - DocPulse",
+      consultationBookingTemplate(
+        userData.name,
+        docData.name,
+        slotDate,
+        slotTime,
+      ),
+    );
+
+    // 2. To Doctor
+    await sendEmail(
+      docData.email,
+      "New Consultation Booked",
+      `You have a new consultation with ${userData.name} on ${slotDate} at ${slotTime}`,
+    );
+
+    res.json({
+      success: true,
+      message: isFirstConsultation
+        ? "Free Consultation Booked"
+        : "Proceed to Payment",
+      consultationId: newConsultation._id,
+      amount,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+//razorpay payment api for consultation
+const paymentConsultation = async (req, res) => {
+  try {
+    const { consultationId } = req.body;
+
+    const consultationData = await consultationModel.findById(consultationId);
+
+    if (!consultationData || consultationData.cancelled) {
+      return res.json({ success: false, message: "Invalid consultation" });
+    }
+
+    const options = {
+      amount: consultationData.amount,
+      currency: process.env.CURRENCY,
+      receipt: consultationId,
+    };
+
+    const order = await razorpayInstance.orders.create(options);
+    res.json({ success: true, order });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+//apis for listing consultations
+const listConsultations = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const consultations = await consultationModel.find({ userId });
+
+    res.json({ success: true, consultations });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// cancel consultation
+const cancelConsultation = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { consultationId } = req.body;
+
+    const consultationData = await consultationModel.findById(consultationId);
+
+    if (!consultationData) {
+      return res.json({ success: false, message: "Consultation not found" });
+    }
+
+    // 🔒 verify user
+    if (consultationData.userId.toString() !== userId.toString()) {
+      return res.json({ success: false, message: "Unauthorized action" });
+    }
+
+    // ❌ mark cancelled
+    await consultationModel.findByIdAndUpdate(consultationId, {
+      cancelled: true,
+    });
+
+    const { userData, docData, slotDate, slotTime } = consultationData;
+
+    // 📧 USER EMAIL
+    await sendEmail(
+      userData.email,
+      "Consultation Cancelled - DocPulse",
+      cancelAppointmentTemplate(
+        userData.name,
+        docData.name,
+        slotDate,
+        slotTime,
+      ),
+    );
+
+    // 📧 DOCTOR EMAIL
+    await sendEmail(
+      docData.email,
+      "Consultation Cancelled",
+      `Consultation with ${userData.name} on ${slotDate} at ${slotTime} has been cancelled.`,
+    );
+
+    res.json({ success: true, message: "Consultation cancelled" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerUser,
   verifyOTP,
@@ -582,4 +769,8 @@ export {
   googleAuth,
   logoutUser,
   verifyUser,
+  bookConsultation,
+  listConsultations,
+  paymentConsultation,
+  cancelConsultation,
 };

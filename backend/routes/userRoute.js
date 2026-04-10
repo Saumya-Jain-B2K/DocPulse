@@ -1,5 +1,5 @@
 import express from 'express'
-import { registerUser, verifyOTP, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth, logoutUser, verifyUser } from '../controllers/userController.js'
+import { registerUser, verifyOTP, loginUser, getProfile, updateProfile, bookAppointment, listAppointment, cancelAppointment, paymentRazorpay, verifyRazorpay, googleAuth, logoutUser, verifyUser, bookConsultation, listConsultations, paymentConsultation, cancelConsultation } from '../controllers/userController.js'
 import authUser from '../middlewares/authUser.js'
 import upload from '../middlewares/multer.js'
 import passport from 'passport'
@@ -40,5 +40,11 @@ userRouter.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login', session: false }),
     googleAuth
 );
+
+//consultation related routes
+userRouter.post('/book-consultation', authUser, bookConsultation);
+userRouter.post('/payment-consultation', authUser, paymentConsultation);
+userRouter.get('/consultations', authUser, listConsultations);
+userRouter.post('/cancel-consultation', authUser, cancelConsultation);
 
 export default userRouter;

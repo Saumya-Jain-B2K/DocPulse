@@ -1,18 +1,21 @@
-import express from 'express';
-import cors from 'cors';
-import connectDB from './config/mongodb.js';
-import 'dotenv/config';
-import connectCloudinary from './config/cloudinary.js';
-import adminRouter from './routes/adminRoute.js';
-import doctorRouter from './routes/doctorRoute.js';
-import userRouter from './routes/userRoute.js';
-import reviewRouter from './routes/reviewRoute.js';
-import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import dotenv from 'dotenv';
-import cookieParser from 'cookie-parser';
-import initCronJobs from './utils/cronJobs.js';
-import sendEmail from './config/emailConfig.js';
+import express from "express";
+import cors from "cors";
+import connectDB from "./config/mongodb.js";
+import "dotenv/config";
+import connectCloudinary from "./config/cloudinary.js";
+import adminRouter from "./routes/adminRoute.js";
+import doctorRouter from "./routes/doctorRoute.js";
+import userRouter from "./routes/userRoute.js";
+import reviewRouter from "./routes/reviewRoute.js";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import initCronJobs from "./utils/cronJobs.js";
+import sendEmail from "./config/emailConfig.js";
+import http from "http";
+import { Server } from "socket.io";
+import messageModel from "./models/messageModel.js";
 
 // app config
 dotenv.config();
@@ -25,44 +28,98 @@ initCronJobs();
 // middlewares
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
-    credentials: true
-}));
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    credentials: true,
+  }),
+);
 
 app.use(passport.initialize());
 
 // Configure Passport to use Google OAuth 2.0 strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/api/user/google/callback',
-}, (accessToken, refreshToken, profile, done) => {
-
-    return done(null, profile);
-}));
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: "/api/user/google/callback",
+    },
+    (accessToken, refreshToken, profile, done) => {
+      return done(null, profile);
+    },
+  ),
+);
 
 //api endpoints
-app.use('/api/admin', adminRouter);
+app.use("/api/admin", adminRouter);
 // localhost:4000/api/admin/add-doctor
 
-app.use('/api/doctor', doctorRouter)
+app.use("/api/doctor", doctorRouter);
 //used to get the data of all doctors for the frontend code
 
-app.use('/api/user', userRouter)
+app.use("/api/user", userRouter);
 //used to register the user
 
-app.use('/api/review', reviewRouter)
+app.use("/api/review", reviewRouter);
 //used for feedback and ratings
 
-app.get('/', (req, res) => {
-    res.send("API is working")
+app.get("/", (req, res) => {
+  res.send("API is working");
 });
 
-app.listen(port, () => {
-    console.log("Server Started", port);
-    // test email on startup
-    // sendEmail('editshot13@gmail.com', 'DocPulse - Startup Test', '<h1>Server Started</h1><p>DocPulse backend is now running and email configuration is being tested.</p>')
-    //     .then(() => console.log('Startup test email sent successfully to editshot13@gmail.com'))
-    //     .catch(err => console.error('Startup test email failed:', err));
+// app.listen(port, () => {
+//   console.log("Server Started", port);
+//   // test email on startup
+//   // sendEmail('editshot13@gmail.com', 'DocPulse - Startup Test', '<h1>Server Started</h1><p>DocPulse backend is now running and email configuration is being tested.</p>')
+//   //     .then(() => console.log('Startup test email sent successfully to editshot13@gmail.com'))
+//   //     .catch(err => console.error('Startup test email failed:', err));
+// });
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    credentials: true,
+  },
+});
+
+// 🔥 SOCKET LOGIC
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  // 🟢 Join room
+  socket.on("joinRoom", (chatRoomId) => {
+    socket.join(chatRoomId);
+    console.log(`User joined room: ${chatRoomId}`);
+  });
+
+  // 🟢 Send message
+  socket.on("sendMessage", async ({ chatRoomId, senderId, message }) => {
+    try {
+      if (!message || message.trim() === "") return;
+
+      const newMessage = new messageModel({
+        chatRoomId,
+        senderId,
+        message,
+      });
+
+      await newMessage.save();
+
+      io.to(chatRoomId).emit("receiveMessage", newMessage);
+    } catch (error) {
+      console.log("Socket Error:", error);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+// 🚀 Start server
+server.listen(port, () => {
+  console.log("Server Started with Socket.io", port);
 });
