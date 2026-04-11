@@ -11,25 +11,41 @@ const MyConsultations = () => {
 
   const navigate = useNavigate();
 
-  const months = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const months = [
+    "",
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
 
   const slotDateFormat = (slotDate) => {
     const dateArray = slotDate.split("_");
-    return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2];
+    return (
+      dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2]
+    );
   };
 
   // 🔥 GET CONSULTATIONS
   const getUserConsultations = async () => {
     try {
-      const { data } = await axios.get(
-        backendUrl + "/api/user/consultations",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const { data } = await axios.get(backendUrl + "/api/user/consultations", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (data.success) {
-        setConsultations(data.consultations ? data.consultations.reverse() : []);
+        setConsultations(
+          data.consultations ? data.consultations.reverse() : [],
+        );
       }
-
     } catch (error) {
       console.log(error);
       toast.error(error.message);
@@ -42,7 +58,7 @@ const MyConsultations = () => {
       const { data } = await axios.post(
         backendUrl + "/api/user/cancel-consultation",
         { consultationId },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -51,9 +67,60 @@ const MyConsultations = () => {
       } else {
         toast.error(data.message);
       }
-
     } catch (error) {
       console.log(error);
+      toast.error(error.message);
+    }
+  };
+
+  // 🔥 RAZORPAY INIT
+  const initPay = (order) => {
+    const options = {
+      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: order.currency,
+      name: "Consultation Payment",
+      description: "Consultation Payment",
+      order_id: order.id,
+      receipt: order.receipt,
+
+      handler: async (response) => {
+        try {
+          const { data } = await axios.post(
+            backendUrl + "/api/user/verify-consultation",
+            response,
+            { headers: { Authorization: `Bearer ${token}` } },
+          );
+
+          if (data.success) {
+            toast.success("Payment Successful");
+            getUserConsultations();
+          }
+        } catch (error) {
+          toast.error(error.message);
+        }
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
+  // 🔥 CONSULTATION PAYMENT
+  const consultationRazorpay = async (consultationId) => {
+    try {
+      const { data } = await axios.post(
+        backendUrl + "/api/user/payment-consultation",
+        { consultationId },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (data.success) {
+        initPay(data.order);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
       toast.error(error.message);
     }
   };
@@ -77,7 +144,11 @@ const MyConsultations = () => {
             key={index}
           >
             <div>
-              <img className="w-32 bg-indigo-50" src={item.docData.image} alt="" />
+              <img
+                className="w-32 bg-indigo-50"
+                src={item.docData.image}
+                alt=""
+              />
             </div>
 
             <div className="flex-1 text-sm text-zinc-600">
@@ -98,11 +169,12 @@ const MyConsultations = () => {
 
             {/* ACTION BUTTONS */}
             <div className="flex flex-col gap-2 justify-end">
-
               {/* JOIN CHAT */}
               {!item.cancelled && !item.isCompleted && (
                 <button
-                  onClick={() => navigate(`/consultation/chat/${item.chatRoomId}`)}
+                  onClick={() =>
+                    navigate(`/consultation/chat/${item.chatRoomId}`)
+                  }
                   className="text-sm text-white bg-green-600 px-4 py-2 rounded"
                 >
                   Join Chat
@@ -119,10 +191,28 @@ const MyConsultations = () => {
                 </button>
               )}
 
+              {/* 💳 PAY ONLINE */}
+              {!item.cancelled &&
+                !item.payment &&
+                !item.isCompleted &&
+                item.amount > 0 && (
+                  <button
+                    onClick={() => consultationRazorpay(item._id)}
+                    className="text-sm border py-2 rounded hover:bg-[#000B6D] hover:text-white"
+                  >
+                    Pay Online
+                  </button>
+                )}
+
               {/* STATUS */}
               {item.cancelled && <p className="text-red-500">Cancelled</p>}
               {item.isCompleted && <p className="text-green-500">Completed</p>}
-
+              {/* ✅ PAID */}
+              {!item.cancelled && item.payment && !item.isCompleted && (
+                <button className="text-sm bg-indigo-50 py-2 rounded text-gray-500">
+                  Paid
+                </button>
+              )}
             </div>
           </div>
         ))}

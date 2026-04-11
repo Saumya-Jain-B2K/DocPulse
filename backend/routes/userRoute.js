@@ -19,6 +19,7 @@ import {
   cancelConsultation,
   getChatMessages,
   getConsultationByRoom,
+  verifyConsultationRazorpay,
 } from "../controllers/userController.js";
 import authUser from "../middlewares/authUser.js";
 import upload from "../middlewares/multer.js";
@@ -75,7 +76,8 @@ userRouter.post("/book-consultation", authUser, bookConsultation);
 userRouter.post("/payment-consultation", authUser, paymentConsultation);
 userRouter.get("/consultations", authUser, listConsultations);
 userRouter.post("/cancel-consultation", authUser, cancelConsultation);
-userRouter.get('/chat/:chatRoomId', getChatMessages)
+userRouter.get("/chat/:chatRoomId", getChatMessages);
 userRouter.get("/consultation/:chatRoomId", getConsultationByRoom);
+userRouter.post("/verify-consultation", authUser, verifyConsultationRazorpay);
 
 export default userRouter;

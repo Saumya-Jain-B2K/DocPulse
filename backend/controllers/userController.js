@@ -577,7 +577,7 @@ const bookConsultation = async (req, res) => {
   try {
     const userId = req.userId;
     const { docId, slotDate, slotTime } = req.body;
-    
+
     //checking if the consultation slot is in the future
     const consultationDateTime = new Date(`${slotDate} ${slotTime}`);
     const now = new Date();
@@ -683,7 +683,7 @@ const paymentConsultation = async (req, res) => {
     }
 
     const options = {
-      amount: consultationData.amount,
+      amount: consultationData.amount * 100, // amount in paise
       currency: process.env.CURRENCY,
       receipt: consultationId,
     };
@@ -784,8 +784,30 @@ const getConsultationByRoom = async (req, res) => {
   }
 };
 
+// 🔥 VERIFY CONSULTATION PAYMENT
+const verifyConsultationRazorpay = async (req, res) => {
+  try {
+    const { razorpay_order_id } = req.body;
+
+    const orderInfo = await razorpayInstance.orders.fetch(razorpay_order_id);
+
+    if (orderInfo.status === "paid") {
+      await consultationModel.findByIdAndUpdate(orderInfo.receipt, {
+        payment: true,
+      });
+
+      res.json({ success: true, message: "Payment Successful" });
+    } else {
+      res.json({ success: false, message: "Payment Failed" });
+    }
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerUser,
+  verifyConsultationRazorpay,
   verifyOTP,
   loginUser,
   getProfile,
