@@ -599,11 +599,11 @@ const bookConsultation = async (req, res) => {
     // 🔥 CHECK FIRST CONSULTATION
     const existingConsultation = await consultationModel.findOne({
       userId,
-      docId,
       cancelled: false,
+      isCompleted: true, // 🔥 ONLY completed count
     });
 
-    let amount = 0;
+    let amount = docData.fees;
     let isFirstConsultation = false;
 
     if (!existingConsultation) {
