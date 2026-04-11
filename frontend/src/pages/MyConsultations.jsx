@@ -102,7 +102,7 @@ const MyConsultations = () => {
               {/* JOIN CHAT */}
               {!item.cancelled && !item.isCompleted && (
                 <button
-                  onClick={() => navigate(`/consultation/chat/${item._id}`)}
+                  onClick={() => navigate(`/consultation/chat/${item.chatRoomId}`)}
                   className="text-sm text-white bg-green-600 px-4 py-2 rounded"
                 >
                   Join Chat

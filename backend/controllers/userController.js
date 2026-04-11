@@ -16,6 +16,7 @@ import {
   cancelAppointmentTemplate,
   consultationBookingTemplate,
 } from "../utils/emailTemplates.js";
+import messageModel from "../models/messageModel.js";
 
 // api to register user
 const registerUser = async (req, res) => {
@@ -755,6 +756,34 @@ const cancelConsultation = async (req, res) => {
   }
 };
 
+// 🔥 GET CHAT HISTORY
+const getChatMessages = async (req, res) => {
+  try {
+    const { chatRoomId } = req.params;
+
+    const messages = await messageModel.find({ chatRoomId });
+
+    res.json({
+      success: true,
+      messages,
+    });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
+const getConsultationByRoom = async (req, res) => {
+  try {
+    const { chatRoomId } = req.params;
+
+    const consultation = await consultationModel.findOne({ chatRoomId });
+
+    res.json({ success: true, consultation });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export {
   registerUser,
   verifyOTP,
@@ -773,4 +802,6 @@ export {
   listConsultations,
   paymentConsultation,
   cancelConsultation,
+  getChatMessages,
+  getConsultationByRoom,
 };

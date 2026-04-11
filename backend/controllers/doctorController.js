@@ -5,6 +5,7 @@ import { completionTemplate } from "../utils/emailTemplates.js";
 import doctorModel from "../models/doctorModel.js";
 import userModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
+import consultationModel from "../models/consultationModel.js";
 
 const changeAvailablity = async (req, res) => {
   try {
@@ -56,7 +57,12 @@ const loginDoctor = async (req, res) => {
         maxAge: 2 * 24 * 60 * 60 * 1000,
       });
 
-      res.json({ success: true, token, message: "Login Successful" });
+      res.json({
+        success: true,
+        token,
+        doctorId: doctor._id, // 🔥 ADD THIS
+        message: "Login Successful",
+      });
     } else {
       res.json({ success: false, message: "Invalid Credentials" });
     }
@@ -217,8 +223,6 @@ const updateDoctorProfile = async (req, res) => {
   }
 };
 
-import consultationModel from "../models/consultationModel.js";
-
 const consultationComplete = async (req, res) => {
   try {
     const { consultationId } = req.body;
@@ -265,11 +269,55 @@ const consultationComplete = async (req, res) => {
   }
 };
 
+// consultation api for doctors
+// 🔥 GET DOCTOR CONSULTATIONS
+const consultationsDoctor = async (req, res) => {
+  try {
+    const docId = req.docId;
+
+    const consultations = await consultationModel.find({ docId });
+
+    res.json({ success: true, consultations });
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+//cancel consultation api for doctors
+const cancelConsultation = async (req, res) => {
+  try {
+    const { consultationId } = req.body;
+    const docId = req.docId;
+
+    const consultationData = await consultationModel.findById(consultationId);
+
+    if (!consultationData) {
+      return res.json({ success: false, message: "Consultation not found" });
+    }
+
+    // 🔒 Verify doctor
+    if (consultationData.docId.toString() !== docId.toString()) {
+      return res.json({ success: false, message: "Unauthorized" });
+    }
+
+    // ✅ Mark cancelled
+    await consultationModel.findByIdAndUpdate(consultationId, {
+      cancelled: true,
+    });
+
+    res.json({ success: true, message: "Consultation cancelled" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+
 export {
   changeAvailablity,
   doctorList,
   loginDoctor,
   appointmentsDoctor,
+  consultationsDoctor,
   appointmentCancel,
   appointmentComplete,
   doctorDashboard,
@@ -278,4 +326,5 @@ export {
   logoutDoctor,
   verifyDoctor,
   consultationComplete,
+  cancelConsultation,
 };
