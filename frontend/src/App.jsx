@@ -1,5 +1,6 @@
 import React from "react";
 import { Route, Routes } from "react-router-dom";
+import { useState } from "react";
 import Home from "./pages/Home";
 import Doctors from "./pages/Doctors";
 import Login from "./pages/Login";
@@ -18,7 +19,11 @@ import { ToastContainer, toast } from "react-toastify";
 import MyConsultations from "./pages/MyConsultations";
 import ConsultationChat from "./pages/ConsultationChat";
 
+import ChatbotButton from "./components/chatbot/ChatbotButton";
+import ChatbotWindow from "./components/chatbot/ChatbotWindow";
+
 const App = () => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
   return (
     <div className="mx-4 sm:mx-[10%]">
       <ToastContainer />
@@ -42,6 +47,9 @@ const App = () => {
           element={<ConsultationChat />}
         />
       </Routes>
+      <ChatbotButton onClick={() => setIsChatOpen(true)} />
+
+      {isChatOpen && <ChatbotWindow onClose={() => setIsChatOpen(false)} />}
       <Footer />
     </div>
   );
