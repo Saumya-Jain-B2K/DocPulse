@@ -41,7 +41,7 @@ const bookingConfirmationTemplate = (name, docName, date, time) => `
     <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>Appointment Confirmed!</h2>
         <p>Hi ${name},</p>
-        <p>Your appointment with <b>Dr. ${docName}</b> has been successfully booked.</p>
+        <p>Your appointment with <b>${docName}</b> has been successfully booked.</p>
         <p><b>Date:</b> ${date}</p>
         <p><b>Time:</b> ${time}</p>
         <p>We look forward to seeing you.</p>
