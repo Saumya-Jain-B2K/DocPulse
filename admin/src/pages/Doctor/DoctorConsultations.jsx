@@ -5,13 +5,12 @@ import { assets } from "../../assets/assets";
 import { useNavigate } from "react-router-dom";
 
 const DoctorConsultations = () => {
-
   const {
     dToken,
     consultations,
     getConsultations,
     cancelConsultation,
-    completeConsultation
+    completeConsultation,
   } = useContext(DoctosContext);
 
   const { calculateAge, slotDateFormat, currency } = useContext(AppContext);
@@ -29,7 +28,6 @@ const DoctorConsultations = () => {
       <p className="mb-3 text-lg font-medium">All Consultations</p>
 
       <div className="bg-white border rounded text-sm max-h-[80vh] overflow-y-scroll min-h-[50vh]">
-
         <div className="max-sm:hidden grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_2fr] gap-1 py-3 px-6 border-b">
           <p>#</p>
           <p>Patient</p>
@@ -41,12 +39,10 @@ const DoctorConsultations = () => {
         </div>
 
         {consultations.reverse().map((item, index) => (
-
           <div
             key={index}
             className="flex flex-wrap justify-between max-sm:gap-5 sm:grid grid-cols-[0.5fr_2fr_1fr_1fr_3fr_1fr_2fr] gap-1 items-center text-gray-500 py-3 px-6 border-b hover:bg-gray-50"
           >
-
             <p className="max-sm:hidden">{index + 1}</p>
 
             <div className="flex items-center gap-2">
@@ -64,21 +60,23 @@ const DoctorConsultations = () => {
               {slotDateFormat(item.slotDate)}, {item.slotTime}
             </p>
 
-            <p>{currency}{item.amount}</p>
+            <p>
+              {currency}
+              {item.amount}
+            </p>
 
             {/* 🔥 ACTIONS */}
             {item.cancelled ? (
               <p className="text-red-400 text-xs">Cancelled</p>
-
             ) : item.isCompleted ? (
               <p className="text-green-500 text-xs">Completed</p>
-
             ) : (
               <div className="flex gap-2">
-
                 {/* JOIN CHAT */}
                 <button
-                  onClick={() => navigate(`/consultation/chat/${item.chatRoomId}`)}
+                  onClick={() =>
+                    navigate(`/consultation/chat/${item.chatRoomId}`)
+                  }
                   className="bg-green-600 text-white px-3 py-1 rounded text-xs"
                 >
                   Join
@@ -97,10 +95,8 @@ const DoctorConsultations = () => {
                   className="w-8 cursor-pointer"
                   src={assets.tick_icon}
                 />
-
               </div>
             )}
-
           </div>
         ))}
       </div>
