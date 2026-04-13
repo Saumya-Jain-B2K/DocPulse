@@ -3,7 +3,11 @@ dotenv.config();
 
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { StateGraph, END, START, MemorySaver } from "@langchain/langgraph";
-import { HumanMessage, SystemMessage, AIMessage } from "@langchain/core/messages";
+import {
+  HumanMessage,
+  SystemMessage,
+  AIMessage,
+} from "@langchain/core/messages";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 
 // Import the tools (this now connects to the backend MongoDB wrapper via Axios)
@@ -28,9 +32,9 @@ const agentState = {
     default: () => [],
   },
   recommendedSpeciality: {
-    value: (x, y) => y !== undefined ? y : x,
+    value: (x, y) => (y !== undefined ? y : x),
     default: () => null,
-  }
+  },
 };
 
 /**
@@ -50,7 +54,7 @@ STRICT RULES:
    - A brief summary of their described problem.
    - Basic diagnosis / First Aid advice that is safe to do at home.
    - The list of doctors that the tool returned to you.
-5. Keep your tone empathetic and professional.`
+5. Keep your tone empathetic and professional.`,
   );
 
   // Invoke the LLM with the full history (system prompt + everything stored in the state)
@@ -69,7 +73,7 @@ function shouldContinue(state) {
   if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
     return "tools";
   }
-  
+
   // Output is standard text reply -> End execution
   return END;
 }
@@ -85,7 +89,7 @@ const workflow = new StateGraph({ channels: agentState })
   .addEdge(START, "agent")
   .addConditionalEdges("agent", shouldContinue)
   // **NEW**: After the tool fetches doctors from MongoDB, return to the agent so it can generate a final diagnosis and first-aid summary!
-  .addEdge("tools", "agent"); 
+  .addEdge("tools", "agent");
 
 // Compile with the checkpointer!
 const app = workflow.compile({ checkpointer: memory });
@@ -95,15 +99,20 @@ const app = workflow.compile({ checkpointer: memory });
  */
 async function processSymptom(newMessages, threadId) {
   try {
-    const formattedMessages = newMessages.map(msg =>
-      msg.role === "user" ? new HumanMessage(msg.content) : new AIMessage(msg.content)
+    const formattedMessages = newMessages.map((msg) =>
+      msg.role === "user"
+        ? new HumanMessage(msg.content)
+        : new AIMessage(msg.content),
     );
 
     const config = { configurable: { thread_id: threadId } };
-    const resultState = await app.invoke({ messages: formattedMessages }, config);
-    
+    const resultState = await app.invoke(
+      { messages: formattedMessages },
+      config,
+    );
+
     const messages = resultState.messages;
-    
+
     // Because the agent naturally responds AFTER the tool now, the absolute last message is the exact natural language response we want!
     const lastMessage = messages[messages.length - 1];
     let finalMessage = lastMessage.content;
@@ -113,12 +122,21 @@ async function processSymptom(newMessages, threadId) {
     let returnedDoctors = null;
 
     // Scan backwards to find the last AI message that executed a tool call
-    const lastToolCallAI = messages.slice().reverse().find(m => m._getType() === 'ai' && m.tool_calls && m.tool_calls.length > 0);
-    
+    const lastToolCallAI = messages
+      .slice()
+      .reverse()
+      .find(
+        (m) => m._getType() === "ai" && m.tool_calls && m.tool_calls.length > 0,
+      );
+
     if (lastToolCallAI) {
       finalSpeciality = lastToolCallAI.tool_calls[0].args.speciality;
-      const toolOutputMsg = messages.find(m => m._getType() === 'tool' && m.tool_call_id === lastToolCallAI.tool_calls[0].id);
-      
+      const toolOutputMsg = messages.find(
+        (m) =>
+          m._getType() === "tool" &&
+          m.tool_call_id === lastToolCallAI.tool_calls[0].id,
+      );
+
       if (toolOutputMsg) {
         try {
           returnedDoctors = JSON.parse(toolOutputMsg.content);
@@ -131,7 +149,7 @@ async function processSymptom(newMessages, threadId) {
     return {
       message: finalMessage,
       speciality: finalSpeciality,
-      doctors: returnedDoctors
+      doctors: returnedDoctors,
     };
   } catch (error) {
     console.error("LangGraph processing error:", error);

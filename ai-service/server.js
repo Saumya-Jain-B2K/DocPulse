@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 import http from "http";
@@ -14,5 +14,5 @@ initSockets(server);
 const PORT = process.env.PORT;
 
 server.listen(PORT, () => {
-    console.log(`AI Service HTTP & WebSocket running on port ${PORT}`);
+  console.log(`AI Service HTTP & WebSocket running on port ${PORT}`);
 });
