@@ -105,13 +105,13 @@ const consultationBookingTemplate = (userName, docName, date, time) => `
     </div>
 `;
 
-export { 
-  otpTemplate, 
-  welcomeTemplate, 
-  doctorOnboardingTemplate, 
+export {
+  otpTemplate,
+  welcomeTemplate,
+  doctorOnboardingTemplate,
   consultationBookingTemplate,
-  bookingConfirmationTemplate, 
-  reminderTemplate, 
-  completionTemplate, 
-  cancelAppointmentTemplate
-}
+  bookingConfirmationTemplate,
+  reminderTemplate,
+  completionTemplate,
+  cancelAppointmentTemplate,
+};

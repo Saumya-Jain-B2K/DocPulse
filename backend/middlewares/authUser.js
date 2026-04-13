@@ -1,5 +1,4 @@
-
-import jwt from 'jsonwebtoken'
+import jwt from "jsonwebtoken";
 
 // user authentication middleware
 const authUser = async (req, res, next) => {
@@ -8,7 +7,10 @@ const authUser = async (req, res, next) => {
     const token = req.cookies.token;
 
     if (!token) {
-      return res.json({ success: false, message: "Not authorized login again" });
+      return res.json({
+        success: false,
+        message: "Not authorized login again",
+      });
     }
 
     const token_decode = jwt.verify(token, process.env.JWT_SECRET);
