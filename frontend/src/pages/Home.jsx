@@ -1,9 +1,9 @@
-import React from 'react'
-import Header from '../components/Header'
-import SpecialityMenu from '../components/SpecialityMenu'
-import TopDoctors from '../components/TopDoctors'
-import Banner from '../components/Banner'
-import Testimonials from '../components/Testimonials'
+import React from "react";
+import Header from "../components/Header";
+import SpecialityMenu from "../components/SpecialityMenu";
+import TopDoctors from "../components/TopDoctors";
+import Banner from "../components/Banner";
+import Testimonials from "../components/Testimonials";
 
 const Home = () => {
   return (
@@ -14,7 +14,7 @@ const Home = () => {
       <Banner />
       <Testimonials />
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

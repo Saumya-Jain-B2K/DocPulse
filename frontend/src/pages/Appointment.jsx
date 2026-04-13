@@ -45,7 +45,7 @@ const Appointment = () => {
       console.log(error);
     }
   };
- 
+
   //normal appointments slots
   const getAvailableSlots = async () => {
     setDocSlots([]);
@@ -167,7 +167,7 @@ const Appointment = () => {
       const { data } = await axios.post(
         backendUrl + "/api/user/book-appointment",
         { docId, slotDate, slotTime },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -204,7 +204,7 @@ const Appointment = () => {
       const { data } = await axios.post(
         backendUrl + "/api/user/book-consultation",
         { docId, slotDate, slotTime },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (data.success) {
@@ -215,7 +215,6 @@ const Appointment = () => {
       toast.error(error.message);
     }
   };
-
 
   useEffect(() => {
     fetchDocInfo();
@@ -297,7 +296,6 @@ const Appointment = () => {
 
         {/* SLOT SECTION */}
         <div className="sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700">
-
           {/* 🔥 DYNAMIC TITLE */}
           <p>{isConsultation ? "Consultation Slots" : "Booking Slots"}</p>
 
@@ -308,9 +306,7 @@ const Appointment = () => {
                 key={index}
                 onClick={() => setSlotIndex(index)}
                 className={`py-6 min-w-16 rounded-full text-center cursor-pointer ${
-                  slotIndex === index
-                    ? "bg-[#000B6D] text-white"
-                    : "border"
+                  slotIndex === index ? "bg-[#000B6D] text-white" : "border"
                 }`}
               >
                 <p>{item[0] && daysOfWeek[item[0].datetime.getDay()]}</p>
@@ -427,4 +423,3 @@ const Appointment = () => {
 };
 
 export default Appointment;
-
