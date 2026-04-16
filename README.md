@@ -111,7 +111,7 @@ npm run dev
 ## 👨‍💻 Author
 **Saumya Jain**
 - GitHub: @Saumya-Jain-B2K
-- LinkedIn: (Add your LinkedIn)
+- LinkedIn: www.linkedin.com/in/saumya-jain-438495283
 
 ## 📄 License
 This project is licensed under the MIT License.
