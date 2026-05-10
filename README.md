@@ -108,10 +108,15 @@ npm start
 cd frontend
 npm run dev
 
-## 👨‍💻 Author
-**Saumya Jain**
+## 👨‍💻 Authors
+**Saumya Jain**(Backend Developer)
 - GitHub: @Saumya-Jain-B2K
 - LinkedIn: www.linkedin.com/in/saumya-jain-438495283
+
+**Riya Harchandani**(Frontend Developer)
+- GitHub: https://github.com/riyaharchandani
+- LinkedIn: https://www.linkedin.com/in/riya-harchandani-09b5992b7/
+
 
 ## 📄 License
 This project is licensed under the MIT License.
